@@ -14,7 +14,7 @@ apatheme=theme_bw(base_size = 22)+
         axis.text.x=element_text(size = 20))
 
 
-d = read.csv('~/Dropbox/__ZHAW/__Projekte_Post_ZHAH/shared_Oliver_Beate/tmvi/runs/Conjugate_Prior/Conjugate_Prior_Exp.csv')
+d = read.csv('runs/Bernoulli_1D/Bernoulli_1D.csv')
 d$X = NULL
 dat = data.frame(t(d))
 colnames(dat) = c('pia', 'Analytical',  'M1','pi1', 'M10','pi10',  'M30', 'pi30', 'Gauss','piG')
@@ -36,5 +36,5 @@ ggplot(df) + geom_line(aes(x=pi, y=density, col=method, linetype=method),size=1.
   apatheme
   
 #Saving
-ggsave('~/Dropbox/__ZHAW/__Projekte_Post_ZHAH/shared_Oliver_Beate/tmvi/runs/Conjugate_Prior/conjugate_prior.pdf',width = 7, height=7/sqrt(2))
-ggsave('~/Dropbox/Apps/Overleaf/bernvi/images/conjugate_prior.pdf',width = 7, height=3.8)
+ggsave('runs/Bernoulli_1D/conjugate_prior.pdf',width = 7, height=7/sqrt(2))
+# ggsave('~/Dropbox/Apps/Overleaf/bernvi/images/conjugate_prior.pdf',width = 7, height=3.8)
