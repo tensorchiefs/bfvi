@@ -70,10 +70,13 @@ hist(ww[,2], freq = FALSE, 100, xlab='mu')
 lines(density(posts_mcmc$mu), col='red')
 
 theta_vi = ww[,3:D]
+
+pdf(file.path(dir_name, '8schools_cp.pdf'))
 par(mfrow=(c(1,2)))
-boxplot(posts_mcmc$theta, ylim=c(-20.5,20.5), main='MCMC')
-boxplot(as.matrix(theta_vi), main='VI', ylim=c(-20.5,20.5))
+boxplot(posts_mcmc$theta, ylim=c(-20.5,20.5), main='MCMC', xlab=expression(theta))
+boxplot(as.matrix(theta_vi), main='VI', ylim=c(-20.5,20.5), xlab=expression(theta))
 par(mfrow=(c(1,1)))
+dev.off()
 
 DF = data.frame(log_tau = log(posts_mcmc$tau), theta_1 = posts_mcmc$theta[,1]) 
 DF$method = 'MCMC'

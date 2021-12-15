@@ -12,7 +12,7 @@ library(loo)
 #Loading of cached data
 
 dir_name = 'runs/8SCHOOLS_NCP_AS_PAPER/'
-PDF = TRUE
+PDF = FALSE
 load(file.path(dir_name, 'loss_hist.rda'))
 load(file.path(dir_name, 'samples.rda'))
 if (PDF) pdf(file.path(dir_name, 'plots.pdf'))
@@ -75,10 +75,12 @@ hist(mu_vi, freq = FALSE, 100, xlab='mu')
 lines(density(posts_mcmc$mu), col='red')
 
 theta_tilde_vi = ww[,3:10]
+pdf(file.path(dir_name, '8schools_ncp.pdf'))
 par(mfrow=(c(1,2)))
-boxplot(as.matrix(posts_mcmc$theta_tilde), main='MCMC Theta_Tilde',ylim=c(-4.5,4.5))
+boxplot(as.matrix(posts_mcmc$theta_tilde), main='MCMC',ylim=c(-4.5,4.5))
 boxplot(as.matrix(theta_tilde_vi), main='VI', ylim=c(-4.5,4.5))
 par(mfrow=(c(1,1)))
+dev.off()
 
 par(mfrow=(c(1,2)))
 boxplot(as.matrix(posts_mcmc$theta), ylim=c(-20,20))

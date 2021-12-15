@@ -30,7 +30,7 @@ if (FALSE){
 }
 load(file="runs/Diamonds/chef_mcmc.rda")
 
-load('runs/Diamonds/diamonds.rda')
+load('data/diamonds.rda')
 
 N = data$N # number data points
 P = as.integer(data$K - 1L) #K contains the intercept
@@ -88,16 +88,23 @@ for (i in 1:14){
 }
 cor(chef_mcmc)
 
-par(mfrow = c(2,1))
-boxplot(w[,1:26], ylim=c(-10,15), main='VI') 
-points(ml$coefficients[1:25], col='red')
-d = cbind(chef_mcmc$Intercept, chef_mcmc[1:24], chef_mcmc$sigma)
-boxplot(d, ylim=c(-10,15), main='MCMC') 
-points(ml$coefficients[1:25], col='red')
-par(mfrow = c(1,1))
-
-
 sigma = tf$math$softplus(w[,P+2])$numpy()
+sub_sample = 5000
+pdf(file.path(dir_name, 'diamonds.pdf'))
+par(mfrow = c(2,1))
+w_vi = as.data.frame(w[,1:25])
+w_vi$sigma = sigma
+names(w_vi) = c('Intercept', paste0('b',1:24), 'Sigma')
+boxplot(w_vi[1:sub_sample,], ylim=c(-10,15), main='BF-VI', las=2, pch=21) 
+points(ml$coefficients[1:25], col='red', pch=4)
+d = cbind(chef_mcmc$Intercept, chef_mcmc[1:24], chef_mcmc$sigma)
+names(d) = c('Intercept', paste0('b',1:24), 'Sigma')
+boxplot(d[1:sub_sample,], ylim=c(-10,15), main='MCMC', las=2) 
+points(ml$coefficients[1:25], col='red', pch=4)
+par(mfrow = c(1,1))
+dev.off()
+
+
 hist(sigma, freq = FALSE, 50, xlab='sigma', col='skyblue', main='Samples for sigma')
 lines(density(posts_mcmc$sigma), col='red', lwd=2)
 lines(density(sigma), col='skyblue', lwd=2)
