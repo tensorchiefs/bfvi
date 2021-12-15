@@ -115,6 +115,45 @@ ggsave(p, filename = 'runs/regression_2D/2D_pairs.pdf', width = 7, height = 7)
 #Attention Manual relabeling has been done
 #ggsave(p, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/2D_pairs.pdf',width = 7, height=7)
 
+#########  Mean Field Gaussian ########
+# Mean field gaussian
+# https://colab.research.google.com/drive/1FKnZ-0x5yBlM3-4p1GzQgW35JhfUwxix
+b = read_csv("runs/regression_2D/MF_GAUSS_VI/2D_MFG_intercept_samples.csv.gz")
+w = read_csv("runs/regression_2D/MF_GAUSS_VI/2D_MFG_w_samples.csv.gz")
+s = read_csv("runs/regression_2D/MF_GAUSS_VI/2D_MFG_sigma_samples.csv.gz")
+TT = 1000
+df = data.frame(beta1 = posts_mcmc$w[1:TT,1], 
+                beta2=posts_mcmc$w[1:TT,2], 
+                sigma=posts_mcmc$sigma[1:TT],
+                intercept = posts_mcmc$b[1:TT],
+                type='MCMC')
+
+df = rbind(df, data.frame(
+  beta1 = w$w1[1:TT], 
+  beta2 = w$w2[1:TT], 
+  sigma= s$b[1:TT],
+  intercept  = b$b[1:TT],
+  type='Gauss-MF'))
+library(ggplot2)
+library(GGally)
+p = ggpairs(df, 
+            aes(color = type, alpha=0.5), 
+            columns = c(1,2,3,4),
+            columnLabels = c('beta1', "beta2", "sigma", 'intercept')
+) + 
+  scale_color_manual(values = c('red', 'blue')) + 
+  scale_fill_manual(values = c('red', 'blue'))
+p = p + theme_bw() + theme(
+  panel.grid.major=element_blank(),
+  panel.grid.minor=element_blank()
+)
+p
+ggsave(p, filename = 'runs/regression_2D/MF_GAUSS_VI/2D.pairs.gauss_vs.mcmc.pdf', width = 7, height = 7)
+ggsave(p, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/2D.pairs.gauss_vs.mcmc.pdf',width = 7, height=7)
+
+
+
+
 
 for (k in 1:P){
   hist(w[,k+1], freq = FALSE, 30, xlab='w', col='skyblue', main=paste0('VI Weight k=', k))
@@ -146,6 +185,5 @@ for (k in 1:P){
 
 plot(density(posts_mcmc$sigma), main='MCMC vs ML sigma')
 abline(v=sd_ml, col='green')
-
 if (PDF) dev.off()
 
