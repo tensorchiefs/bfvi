@@ -1,5 +1,4 @@
-exp_name = 'F1F2'
-M = 60
+exp_name = 'TruncF2'
 import functools
 import os.path
 
@@ -43,7 +42,7 @@ class LogKL(tf.keras.callbacks.Callback):
 # %%
 
 
-def initialize_models(seed=2, prior_dist=tfd.Normal(loc=0.,scale=1.)):
+def initialize_models(seed=2, prior_dist=tfd.Normal(loc=0.,scale=1.), M=None):
     models = {}
     # Ms = [1, 3, 10, 30, 100, 300]
     Ms = [M]
@@ -114,7 +113,7 @@ def train(models, data, epochs):
         #     partial(scheduler, lr_start=0.1, lr_stop=0.025, epochs=epochs))
         model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.01), loss=sample_nll_p,
                       run_eagerly=False)
-        model.fit(tf.ones(data.shape), data, epochs=epochs, verbose=False, callbacks=[LogKL()])
+        return (model.fit(tf.ones(data.shape), data, epochs=epochs, verbose=False, callbacks=[LogKL()]))
 
 
 def eval(s, models, ytensor, prior_dist, epoch=0):
@@ -159,55 +158,61 @@ def eval(s, models, ytensor, prior_dist, epoch=0):
         kl_summary[name] = np.array(log_p_D + kl_unnorm)
         samples[name] = dict(w=w, log_q_w=log_qw)
         print(f"{name} KL: {kl_summary[name]:.2e}")
-        df1 = pd.DataFrame(data=np.transpose(np.array([w, log_qw])), columns=['w', 'log_qw'])
-        df1.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_{exp_name}_samples_{name}_seed_{s}_epoch_{epoch}.csv")
+        #df1 = pd.DataFrame(data=np.transpose(np.array([w, log_qw])), columns=['w', 'log_qw'])
+        #df1.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_{exp_name}_samples_{name}_seed_{s}_epoch_{epoch}.csv")
     return kl_summary, samples, params
 
 # %%
 if __name__ == '__main__':
-    print(os.path.splitext(__file__)[0])
-    print(f"{os.path.splitext(__file__)[0]}_kl.csv")
-    data = np.array((1.2083935, -2.7329216, 4.1769943, 1.9710574, -4.2004027, -2.384988))
-    data = data.reshape(-1,1)
-    num = len(data)
-    sigma = 0.5
-    sample_nll_p = partial(sample_nll, scale=sigma)
-    sample_nll_p.__name__ = "sample_nll_p"
-    sample_nll_p.__module__ = sample_nll.__module__
-    prior_dist=tfd.Normal(loc=0.,scale=1.)
+    Ms = [2,3,6,10,20,30,50,60,100,200,300]
+    #Ms = [100]
+    for M in Ms:
+        print(os.path.splitext(__file__)[0])
+        print(f"{os.path.splitext(__file__)[0]}_kl.csv")
+        data = np.array((1.2083935, -2.7329216, 4.1769943, 1.9710574, -4.2004027, -2.384988))
+        data = data.reshape(-1,1)
+        num = len(data)
+        sigma = 0.5
+        sample_nll_p = partial(sample_nll, scale=sigma)
+        sample_nll_p.__name__ = "sample_nll_p"
+        sample_nll_p.__module__ = sample_nll.__module__
+        prior_dist=tfd.Normal(loc=0.,scale=1.)
 
-    seeds = np.arange(2, 41, 2)
-    #seeds = np.array([2,4,6])
-    df = None
-    df_params = None
-    samples_all = {}
-    params_all = None
-    for s in seeds:
-        print(f"------ Run exp with seed {s} ------")
-        models = initialize_models(s, prior_dist)
-        _, _, param = eval(s, models, data, prior_dist, epoch='initial')
-        if params_all is None:
-            params_all = param
-        else:
+        seeds = np.arange(2, 41, 2)
+        #seeds = np.array([2,4,6])
+        df = None
+        df_params = None
+        samples_all = {}
+        params_all = None
+        for s in seeds:
+            print(f"------ Run exp with seed {s} ------")
+            models = initialize_models(s, prior_dist, M=M)
+            _, _, param = eval(s, models, data, prior_dist, epoch='initial')
+            if params_all is None:
+                params_all = param
+            else:
+                params_all = pd.concat([params_all,param], axis=0)
+            loss_hist = train(models, data, epochs=1000)
+            #for name, model in models.items():
+            #    df_loss = pd.DataFrame(loss_hist.history)
+            #    df_loss.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_{exp_name}_loss_{name}_seed_{s}.csv")
+            kl_summary, samples, param = eval(s, models, data, prior_dist, epoch='trained_10K')
+
+            #np.savez(f"{os.path.splitext(__file__)[0]}_samples.npz", samples=samples_all)
+            #samples_all[s] = samples
+            #df1 = pd.DataFrame(samples)
+            #df1.to_csv(f"{os.path.splitext(__file__)[0]}_dumm.csv")
+
             params_all = pd.concat([params_all,param], axis=0)
-        train(models, data, epochs=1000)
-        kl_summary, samples, param = eval(s, models, data, prior_dist, epoch='trained')
-
-        #np.savez(f"{os.path.splitext(__file__)[0]}_samples.npz", samples=samples_all)
-        #samples_all[s] = samples
-        #df1 = pd.DataFrame(samples)
-        #df1.to_csv(f"{os.path.splitext(__file__)[0]}_dumm.csv")
-
-        params_all = pd.concat([params_all,param], axis=0)
-        if df is None:
-            df = pd.DataFrame(kl_summary, index=[s])
-        else:
-            df_sub = pd.DataFrame(kl_summary, index=[s])
-            df = pd.concat([df, df_sub])
-    df = df.reset_index().rename(columns={"index": "seed"})
-    print(df)
-    df.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_M_{M}_{exp_name}_kl.csv")
-    params_all.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_M_{M}_{exp_name}_params.csv")
+            if df is None:
+                df = pd.DataFrame(kl_summary, index=[s])
+            else:
+                df_sub = pd.DataFrame(kl_summary, index=[s])
+                df = pd.concat([df, df_sub])
+        df = df.reset_index().rename(columns={"index": "seed"})
+        print(df)
+        #df.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_M_{M}_{exp_name}_kl.csv")
+        params_all.to_csv(f"{os.path.dirname(__file__)}/runs/cauchy_ablation/{os.path.splitext(__file__)[0].split('/')[-1]}_M_{M}_{exp_name}_params.csv")
     #df.to_csv(f"{os.path.splitext(__file__)[0]}_kl.csv")
     #np.savez(f"{os.path.splitext(__file__)[0]}_samples.npz", samples=samples_all)
 

@@ -75,10 +75,10 @@ gg_chauchy = ggplot(df) +
   geom_boxplot(aes(x=M, y=KL, fill=type, group=cut_interval(x=M, length=0.25)))+
   geom_jitter(aes(x=M, y=KL, col=type),alpha=0.9) +
   geom_line(data=df2, aes(x=x,y=y), linetype=2, size=1.2) +
-  scale_x_log10() + 
+  #scale_x_log10() + 
   scale_y_log10(name=expression(paste('KL(q(',theta,') || p(',theta,'|D))'))) +
   annotate("text", x = 20, y = 0.9/20, label = "~1/M", size=6) +
-  #annotate("text", x = 3,  y = 0.8, label = "Cauchy example", size=6) +
+  annotate("text", x = 3,  y = 0.8, label = "Cauchy example", size=6) +
   apatheme
 gg_chauchy
 ggsave('kl_vs_m_chauchy.pdf',gg_chauchy)

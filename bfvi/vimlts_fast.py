@@ -96,8 +96,12 @@ class VimltsLinear(tf.keras.layers.Layer):
 
         # Kernel
         shape = (input_shape.as_list()[-1], self.units_)
-        self.z_dist_ = tfd.Normal(loc=tf.zeros(shape),
-                                  scale=tf.ones(shape))
+        #self.z_dist_ = tfd.Normal(loc=tf.zeros(shape),
+        #                           scale=tf.ones(shape))
+        #loc=0.5,scale=0.15,low=0.,high=1.
+        self.z_dist_ = tfd.TruncatedNormal(loc=0.5*tf.ones(shape), scale=0.15*tf.ones(shape), low=0.0001+tf.zeros(shape), high=tf.ones(shape)-0.0001)
+        #self.z_dist_ = tfd.Uniform(low=1e-12+tf.zeros(shape), high=tf.ones(shape)-1e-12)
+
         self.k_alpha_w = self.add_weight(name='k_alpha_w',
                                          shape=shape,
                                          initializer=self.k_alpha_w_,
@@ -164,7 +168,9 @@ class VimltsLinear(tf.keras.layers.Layer):
         :return: [#samples x #input x #output]
         """
         z_ = tf.math.multiply(tf.math.softplus(self.alpha_z), z) - self.beta_z
-        return tf.math.sigmoid(z_)
+        return (z) #TruncF2
+        #return tf.math.sigmoid(z) #SigmoidF2
+        #return tf.math.sigmoid(z_) #F1F2
 
     def f_2(self, z_):
         """
@@ -190,7 +196,8 @@ class VimltsLinear(tf.keras.layers.Layer):
         :type z_w: object
         :return: shape [#sample x #input x #output]
         """
-        return tf.math.multiply(tf.math.softplus(self.alpha_w), z_w) - self.beta_w
+        return z_w #tf.math.multiply(tf.math.softplus(self.alpha_w), z_w) - self.beta_w
+        #return tf.math.multiply(tf.math.softplus(self.alpha_w), z_w) - self.beta_w
 
     # def get_w_dist(self, num=1000):
     #     with tf.GradientTape() as tape:
