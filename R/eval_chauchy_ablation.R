@@ -1,4 +1,4 @@
-setwd("~/Documents/workspace/bfvi/R")
+#setwd("~/Documents/workspace/bfvi/R")
 
 library(readr)
 library(ggplot2)
@@ -88,6 +88,11 @@ if (FALSE){
   df_kl_TruncF2 = df_kl 
   write_csv(df_kl_TruncF2, file='df_kl_TruncF2.csv')
 }
+
+
+
+########## produce kl_vs_M_methods_chauchy plot #######
+
 df_kl = read_csv('df_kl_F1F2.csv')
 df_kl = rbind(df_kl, read_csv('df_kl_SigmoidF2.csv'))
 df_kl = rbind(df_kl, read_csv('df_kl_TruncF2.csv'))
@@ -97,7 +102,7 @@ if (FALSE){
   df_plot = read_csv(file='df_plot_M50.csv')
   df_plot$M = NULL
 }
-nrow(df_plot)
+nrow(df_kl)
 
 
 ####### KL - Dependence on M #####
@@ -187,7 +192,7 @@ p = ggplot(dd) +
 p
 ggsave('cauchy_M50_methods.pdf', p)
 
-###########  F1F2 for M=2,6,10,30,50 with Gauss and MCMC ###########
+###########  produce cauchy_F1F2_M_comparison plot ###########
 apatheme=theme_bw(base_size = 22)+
   theme(panel.grid.major=element_blank(),
         panel.grid.minor=element_blank(),
