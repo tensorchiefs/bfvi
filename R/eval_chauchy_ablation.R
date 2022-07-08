@@ -9,6 +9,7 @@ library(tfprobability)
 source('bern_utils.R')
 source('eval_utils.R')
 library(readr)
+library(dplyr)
 
 mcmc_df =  fread("runs/Cauchy_1D/mcmc_densities.csv.gz")[-1,]
 
@@ -16,7 +17,8 @@ Ms = c(2,3,6,10,20,30,50,60)#,100,200,300)
 #Ms = c(50)
 #M = 1
 method = 'F1F2'
-dir = "~/Documents/workspace/bfvi/bfvi/runs/cauchy_ablation/"
+#dir = "~/Documents/workspace/bfvi/bfvi/runs/cauchy_ablation/"
+dir = "../bfvi/runs/cauchy_ablation/"
 #Checking if all files exists 
 for (M in Ms){
   param_fn = paste0(dir,"cauchy_eval_ablation_M_", M, "_", method, "_params.csv")
@@ -29,16 +31,17 @@ df_kl = NULL
 for (M in Ms){
   param_fn = paste0(dir,"cauchy_eval_ablation_M_", M, "_", method, "_params.csv")
   print(paste0("Starting with M ", M, "file", param_fn))
-  params <- read_csv(param_fn)
-  params$X1 = NULL
+  params <- read_csv(param_fn, col_names = TRUE)
+  params = params[,-1] 
   M1 = ncol(params) - 5 + 1 #M+1
   colnames(params) = c('seed','epoch','az','bz', paste0('theta_p', 1:M1))
   seeds = unique(params$seed)
-  theta = to_theta(tf$reshape(tf$Variable(as.numeric(params[line,5:ncol(params)])),c(1L,-1L)))
+  # theta = to_theta(tf$reshape(tf$Variable(as.numeric(params[line,5:ncol(params)])),c(1L,-1L)))
   beta_dists_for_h = init_beta_dist_for_h(M1)
   
   for (seed in seeds){
     line = which(params$seed == seed & params$epoch!='initial')
+    theta = to_theta(tf$reshape(tf$Variable(as.numeric(params[line,5:ncol(params)])),c(1L,-1L)))
     num_samples = 5000L
     df_w_logqw = get_w_logqw(theta = theta, num_samples = num_samples,
                              a_np = params$az[line], 
