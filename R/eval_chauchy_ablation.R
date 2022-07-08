@@ -154,7 +154,7 @@ gg_chauchy = ggplot(dat) +
   apatheme
 gg_chauchy
 ggsave('kl_vs_M_methods_chauchy.pdf',gg_chauchy)
-ggsave(gg_chauchy, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/kl_vs_M_methods_chauchy.pdf')
+ggsave(gg_chauchy, width = 7, height=4.8, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/kl_vs_M_methods_chauchy.pdf')
 
 #pkl_k10 = pkl 
 
