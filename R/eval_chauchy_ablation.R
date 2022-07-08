@@ -108,7 +108,7 @@ apatheme=theme_bw(base_size = 22)+
         axis.line=element_line(),
         text=element_text(family='Times'),
         legend.title=element_blank(),
-        legend.position = c(0.2,0.2),
+        legend.position = c(0.8,0.8),
         axis.text.y=element_text(size = 20),
         axis.text.x=element_text(size = 20))
 
@@ -125,19 +125,31 @@ runs_M <- read_csv("runs/Cauchy_1D/01_single_weight_kl_eval_kl.csv")
 df_kl = rbind(df_kl,
               data.frame(seed = runs_M$seed, kl=runs_M$`Gauss-VI`, M=0.5, method='Gauss-VI', num_samples=1000))
 
-dat = df_kl %>% filter(M < 61) %>% filter(method == 'F1F2' | method == 'Gauss-VI')
+dat = df_kl %>% 
+  filter(M < 61009) 
+  #filter(method == 'F1F2' | method == 'Gauss-VI')
+
 gg_chauchy = ggplot(dat) + 
   geom_jitter(aes(x=M, y=kl, col=method),alpha=0.9) +
-  geom_boxplot(aes(x=M, y=kl, fill=method, group=cut_interval(x=M, length=0.5))) + 
-  geom_line(data=df2, aes(x=x,y=y), linetype=2, size=1.2) +
+  #geom_boxplot(aes(x=M, y=kl, fill=method, group=cut_interval(x=M, length=0.5))) + 
+  #geom_line(data=df2, aes(x=x,y=y), linetype=2, size=1.2) +
   scale_x_log10() + 
   ylab(expression(paste('KL(q(',theta,') || p(',theta,'|D))')))+
-  scale_y_log10(name=expression(paste('KL(q(',theta,') || p(',theta,'|D))'))) +
-  annotate("text", x = 20, y = 2/20, label = "~1/M", size=6) +
+  #scale_y_log10(name=expression(paste('KL(q(',theta,') || p(',theta,'|D))'))) +
+  #annotate("text", x = 20, y = 2/20, label = "~1/M", size=6) +
+  scale_color_manual(
+    name = 'Method',
+    values = c(
+      "Gauss-VI" = "green",
+      "F1F2" = "darkblue",
+      "SigmoidF2" = "turquoise",
+      "TruncF2" = "brown"),
+    labels = c('Gauss-VI', 'N-F1F2','N-SigmoidF2','TruncN-F2')
+  )  +
   apatheme
 gg_chauchy
-ggsave('kl_vs_m_chauchy_5Jul_logkl_F1F2.pdf',gg_chauchy)
-#ggsave(gg_chauchy, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/kl_vs_m_chauchy_5Jul.pdf')
+ggsave('kl_vs_M_methods_chauchy.pdf',gg_chauchy)
+ggsave(gg_chauchy, filename = '~/Dropbox/Apps/Overleaf/bernvi/images/kl_vs_M_methods_chauchy.pdf')
 
 #pkl_k10 = pkl 
 
@@ -210,8 +222,8 @@ p = ggplot(dd) +
       "2" = "darkgreen",
       "6" = "steelblue",
       "10" = "pink",
-      "30" = "darkblue",
-      "50" = "grey",
+      "30" = "grey",
+      "50" = "darkblue",
       "0" = "red"),
     labels = c('Gauss-VI', 'M=2','M=6','M=10','M=30','M=50', 'MCMC')
   ) +
