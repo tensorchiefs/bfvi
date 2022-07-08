@@ -12,6 +12,7 @@ library(readr)
 library(dplyr)
 
 mcmc_df =  fread("runs/Cauchy_1D/mcmc_densities.csv.gz")[-1,]
+mcmc_df = mcmc_df %>%  arrange(w) #Sorting
 
 Ms = c(2,3,6,10,20,30,50,60)#,100,200,300)
 #Ms = c(50)
@@ -190,10 +191,16 @@ d =  fread("runs/Cauchy_1D/Gauss-VI_densities.csv.gz")[-1,]
 df_p = rbind(df_plot, data.frame(M=0.5, method='Gauss-VI', x=d$V1, density=d$V2, seed=1))
 dd = df_p %>% filter(method %in% c('F1F2', 'Gauss-VI', 'MCMC')) %>% 
   filter(M %in% c(0.5,2,6,10,30,50,0)) %>% 
-  filter(as.numeric(seed) < 11) 
+  #sample_n(1e4) %>% 
+  filter(as.numeric(seed) < 11) %>% arrange(method, factor(M), x) %>% subset(method != 'MCMC')
+
+dfmcmc = subset(dd, method == 'MCMC') %>% sample_n(1e3)
+
+library(dplyr)
 
 p = ggplot(dd) + 
-  geom_line(aes(x=x, y=density, col=factor(M), linetype=method),size=1) + 
+  geom_line(aes(x=x, y=density, col=factor(M)),size=0.75) + 
+  geom_line(data = dfmcmc, aes(x=x, y=density, col=factor(M)), linetype=2, size=1) +
   #geom_line(data=mcmc_df, aes(x=w, y = lp__)) +
   xlab(expression(xi)) + 
   scale_color_manual(
@@ -212,5 +219,5 @@ p = ggplot(dd) +
   apatheme
 p
 ggsave('cauchy_F1F2_M_comparison.pdf', p,width = 7, height=4.8)
-
+ggsave(p, width = 7, height=4.8,filename = '~/Dropbox/Apps/Overleaf/bernvi/images/cauchy_F1F2_M_comparison.pdf')
 
